@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>交通費申請チェック</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      width: 100%;
+      min-width: 350px;
+      max-width: 600px;
+      min-height: 100vh;
+      padding: 16px;
+      background: #f5f5f5;
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 18px;
+      margin-bottom: 16px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-icon {
+      font-size: 24px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 16px;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    #loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+
+    #results {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+      display: none;
+    }
+
+    .result-section {
+      margin-bottom: 20px;
+    }
+
+    .result-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .result-title {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #eee;
+    }
+
+    .result-item {
+      padding: 12px;
+      margin-bottom: 8px;
+      border-radius: 4px;
+      border-left: 4px solid;
+    }
+
+    .result-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .error {
+      background: #ffebee;
+      border-left-color: #f44336;
+    }
+
+    .warning {
+      background: #fff3e0;
+      border-left-color: #ff9800;
+    }
+
+    .success {
+      background: #e8f5e9;
+      border-left-color: #4CAF50;
+    }
+
+    .item-icon {
+      font-size: 18px;
+      margin-right: 8px;
+    }
+
+    .item-date {
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .item-detail {
+      color: #666;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .item-action {
+      color: #1976D2;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .summary {
+      background: #e3f2fd;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 16px;
+      border-left: 4px solid #2196F3;
+    }
+
+    .summary-title {
+      font-weight: bold;
+      color: #1976D2;
+      margin-bottom: 4px;
+    }
+
+    .summary-content {
+      font-size: 13px;
+      color: #555;
+    }
+
+    .no-data {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+
+    .sort-button {
+      padding: 6px 12px !important;
+      margin: 0 4px !important;
+      font-size: 12px !important;
+      border: 1px solid #ddd !important;
+      background: white !important;
+      color: #333 !important;
+      border-radius: 3px !important;
+      cursor: pointer !important;
+      transition: background 0.2s !important;
+      width: auto !important;
+    }
+
+    .sort-button:hover {
+      background: #e3f2fd !important;
+      border-color: #2196F3 !important;
+    }
+
+    .sort-button:active {
+      background: #bbdefb !important;
+    }
+  </style>
+</head>
+<body>
+  <h1>
+    <span class="header-icon">🚆</span>
+    交通費申請チェック
+  </h1>
+
+  <button id="checkButton">チェック開始</button>
+
+  <div style="margin-top: 12px; padding: 10px; background: white; border-radius: 4px; border: 1px solid #ddd;">
+    <label style="font-size: 13px; font-weight: 500; color: #555; display: flex; align-items: center; cursor: pointer;">
+      <input type="checkbox" id="autoCheckToggle" style="margin-right: 8px; cursor: pointer;">
+      <span>自動チェック（ページ変更を検知）</span>
+    </label>
+  </div>
+
+  <div id="sortControls" style="display: none; margin-top: 12px; margin-bottom: 12px; padding: 10px; background: #f5f5f5; border-radius: 4px; text-align: left;">
+    <label style="font-size: 13px; font-weight: 500; color: #555; display: inline-block; margin-right: 8px;">並び替え:</label>
+    <button id="sortDateAsc" class="sort-button">日付 ↑</button>
+    <button id="sortDateDesc" class="sort-button">日付 ↓</button>
+  </div>
+
+  <div id="loading">
+    <p>チェック中...</p>
+  </div>
+
+  <div id="results"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

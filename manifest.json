@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "ジョブカン交通費申請チェック",
+  "version": "1.0.0",
+  "description": "ジョブカンの交通費申請をチェックし、重複や休日申請の問題を検出します",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "sidePanel"
+  ],
+  "host_permissions": [
+    "https://ssl.jobcan.jp/*",
+    "https://ssl.wf.jobcan.jp/*",
+    "https://holidays-jp.github.io/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://ssl.jobcan.jp/*",
+        "https://ssl.wf.jobcan.jp/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "side_panel": {
+    "default_path": "popup.html"
+  },
+  "action": {
+    "default_title": "交通費申請チェック"
+  }
+}
