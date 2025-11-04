@@ -24,6 +24,54 @@
       .trim();
   }
 
+  // テーブル定義（拡張可能な宣言的設定）
+  const TABLE_DEFINITIONS = [
+    {
+      id: 'commute',
+      title: '通勤交通費',
+      h3Keywords: ['通勤交通費'],
+      headerKeywords: ['出発', '到着', '往復']  // 全て必須
+    }
+    // 将来的に他のテーブル種類を追加可能
+    // 例: { id: 'business_trip', title: '出張交通費', h3Keywords: ['出張交通費'], headerKeywords: [...] }
+  ];
+
+  /**
+   * テーブルが指定された定義に一致するかを判定する汎用関数
+   * @param {HTMLElement} table - 判定対象のテーブル要素
+   * @param {Object} definition - テーブル定義オブジェクト
+   * @returns {Object|null} 一致した場合は {matched: true, method: string}、不一致の場合は null
+   */
+  function detectTableType(table, definition) {
+    // 1. h3タイトルで判定（最優先・最も信頼性が高い）
+    const parentDiv = table.closest('div[ng-controller*="Transport"]') || table.parentElement;
+    if (parentDiv && definition.h3Keywords) {
+      const h3 = parentDiv.querySelector('h3.specifics-title');
+      if (h3) {
+        const hasKeyword = definition.h3Keywords.some(keyword =>
+          h3.textContent.includes(keyword)
+        );
+        if (hasKeyword) {
+          return { matched: true, method: 'h3タイトル' };
+        }
+      }
+    }
+
+    // 2. フォールバック: テーブルヘッダーで判定
+    if (definition.headerKeywords) {
+      const headers = table.querySelectorAll('thead th');
+      const headerTexts = Array.from(headers).map(th => th.textContent.trim());
+      const allKeywordsFound = definition.headerKeywords.every(keyword =>
+        headerTexts.some(text => text.includes(keyword))
+      );
+      if (allKeywordsFound) {
+        return { matched: true, method: 'テーブルヘッダー（フォールバック）' };
+      }
+    }
+
+    return null;
+  }
+
   // 交通費申請データを抽出する関数
   function extractExpenseData() {
     console.log('=== データ抽出開始 ===');
@@ -32,30 +80,40 @@
     const tables = document.querySelectorAll('table.tablelist.specificsSheet.pcTable');
 
     if (tables.length === 0) {
-      console.warn('交通費申請テーブルが見つかりませんでした');
+      console.warn('⚠️ 交通費申請テーブルが見つかりませんでした（CSSセレクタに該当なし）');
+      console.warn('   画面に表示されているテーブル数:', document.querySelectorAll('table').length);
       return null;
     }
+
+    console.log(`📋 ${tables.length}個のテーブルを検出しました`);
 
     const expensesByTable = [];
 
     tables.forEach((table, tableIndex) => {
-      // テーブルのタイトルを取得
-      const prevElement = table.previousElementSibling;
-      let tableTitle = null;
-      let isCommuteTable = false;
+      console.log(`\n--- テーブル ${tableIndex + 1} の判定 ---`);
 
-      if (prevElement && prevElement.innerText) {
-        const titleText = prevElement.innerText.trim();
-        if (titleText.includes('オフィスへの通勤')) {
-          tableTitle = '通勤交通費';
-          isCommuteTable = true;
+      // テーブル定義をループして一致するものを探す
+      let matchedDefinition = null;
+      let detectionResult = null;
+
+      for (const definition of TABLE_DEFINITIONS) {
+        const result = detectTableType(table, definition);
+        if (result && result.matched) {
+          matchedDefinition = definition;
+          detectionResult = result;
+          break;
         }
       }
 
-      // 通勤交通費テーブル以外はスキップ
-      if (!isCommuteTable) {
+      // 定義に一致しないテーブルはスキップ
+      if (!matchedDefinition) {
+        console.log('  ⏭️  対象テーブルではないためスキップ');
         return;
       }
+
+      console.log(`  ✅ ${matchedDefinition.title}テーブルを検出 - 判定方法: ${detectionResult.method}`);
+
+      const tableTitle = matchedDefinition.title;
 
       // このテーブル内のデータ行を取得
       const rows = table.querySelectorAll('tr.item.ng-scope');
